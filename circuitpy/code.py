@@ -71,9 +71,9 @@ while True:
 
     # Press the buttons to play sounds!
     if cpx.button_a:
-        cpx.play_file("drama.wav")
+        cpx.play_file("sound_a.wav")
     elif cpx.button_b:
-        cpx.play_file("low_fade.wav")
+        cpx.play_file("sound_b.wav")
 
     # Set TONE_PIANO to True above to enable a tone piano on the touch pads!
     if TONE_PIANO:
