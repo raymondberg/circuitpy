@@ -1,95 +1,131 @@
 """For a detailed guide on all the features of the Circuit Playground Express (cpx) library:
 https://adafru.it/cp-made-easy-on-cpx"""
+import random
 import time
 import microcontroller
 from adafruit_circuitplayground.express import cpx
 
-# Set TONE_PIANO to True to enable a tone piano on the touch pads!
-TONE_PIANO = False
-
 # Set this as a float from 0 to 1 to change the brightness. The decimal represents a percentage.
 # So, 0.3 means 30% brightness!
-cpx.pixels.brightness = 0.3
+cpx.pixels.brightness = 0.2
 
 # Changes to NeoPixel state will not happen without explicitly calling show()
 cpx.pixels.auto_write = False
+cpx.detect_taps = 1
 
-# Startup behavior is based on your board's unique ID!
-# uid returns a bytearray. The individual numbers are summed then modulo by 3.
-board_id = sum(microcontroller.cpu.uid) % 3
+tones = {
+    'C': 262,
+    'D': 294,
+    'E': 330,
+    'F': 349,
+    'G': 392,
+    'A': 440,
+    'B': 494,
+    'C2': 550,
+}
+notes = [
+    ('E', .25),
+    ('E', .25),
+    ('E', .50),
+    ('E', .25),
+    ('E', .25),
+    ('E', .50),
+    ('E', .25),
+    ('G', .50),
+    ('C', .25),
+    ('D', .25),
+    ('E', .50),
 
+    ('F', .25),
+    ('F', .25),
+    ('F', .25),
+    ('F', .25),
+    ('F', .25),
+    ('E', .25),
+    ('E', .50),
 
-def color_wheel(pos):
-    # Input a value 0 to 255 to get a color value.
-    # The colours are a transition red - green - blue - back to red.
-    if pos < 0 or pos > 255:
-        return (0, 0, 0)
-    if pos < 85:
-        return (int(255 - pos*3), int(pos*3), 0)
-    if pos < 170:
-        pos -= 85
-        return (0, int(255 - pos*3), int(pos*3))
-    pos -= 170
-    return (int(pos * 3), 0, int(255 - (pos*3)))
+    ('E', .02),
+    ('E', .02),
+    ('G', .25),
+    ('G', .25),
+    ('F', .25),
+    ('D', .25),
+    ('C', 1.0),
+    (None, 2.0),
+]
 
-
-# Digi-Key colors: red and white!
-digi_key_colors = ((255, 0, 0), (180, 180, 150))
-# Python colors: blue and yellow!
-python_colors = ((32, 64, 255), (255, 180, 20))
-
-color_index = 0
+note_index = 0
 pixel_number = 0
+shaken_count = 0
+shook_up = 30
+invert_colors = False
+invert_direction = False
+current_note = None
+note_start = None
+note_count = len(notes)
 # time.monotonic() allows for non-blocking LED animations!
 start = time.monotonic()
 while True:
     now = time.monotonic()
-    if board_id == 0:
-        # Flash Digi-Key colors!
-        if now - start > 0.5:
-            color_index = (color_index + 1) % len(digi_key_colors)
-            cpx.pixels.fill(digi_key_colors[color_index])
-            cpx.pixels.show()
-            start = now
-    elif board_id == 1:
-        # Flash Python colors!
-        if now - start > 0.5:
-            color_index = (color_index + 1) % len(python_colors)
-            cpx.pixels.fill(python_colors[color_index])
-            cpx.pixels.show()
-            start = now
-    elif board_id == 2:
-        # Red-comet rainbow swirl!
+
+    # If a shake is detected, turn on the snowglobe
+    if cpx.shake(14):
+        shaken_count = shook_up
+
+    # Snowglobe mode
+    if shaken_count > 0:
+        shaken_count -= 1
+        for white_pixel in range(10):
+            how_shook = shaken_count / shook_up
+            if how_shook > random.random():
+                cpx.pixels[white_pixel] = tuple(int(255 * how_shook) for _ in range(3))
+            else:
+                cpx.pixels[white_pixel] = (0, 0, 0)
+        cpx.pixels.show()
+
+    # Wreath mode
+    else:
         pixel_number = (pixel_number + 1) % 10
-        for p in range(10):
-            color = color_wheel(25 * ((pixel_number + p) % 10))
-            cpx.pixels[p] = tuple([int(c * (10 - (pixel_number + p) % 10) / 10.0) for c in color])
+        useful_pixel_number = 9 - pixel_number if invert_direction else pixel_number
+        cpx.pixels[useful_pixel_number] = (0, 255, 0) if invert_colors else (255, 0, 0)
+        for p in range(1, 10):
+            if invert_direction:
+                pixel = useful_pixel_number - p
+                pixel += 10 if pixel < 0 else 0
+            else:
+                pixel = (useful_pixel_number + p) % 10
+            if invert_colors:
+                cpx.pixels[pixel] = (int(225 * (p/40)), 0, 0)
+            else:
+                cpx.pixels[pixel] = (0, int(225 * (p/40)), 0)
             cpx.pixels.show()
 
-    # If the switch is to the left, it returns True!
-    cpx.red_led = cpx.switch
 
     # Press the buttons to play sounds!
     if cpx.button_a:
         cpx.play_file("sound_a.wav")
+        invert_colors = not invert_colors
     elif cpx.button_b:
         cpx.play_file("sound_b.wav")
+        invert_direction = not invert_direction
 
-    # Set TONE_PIANO to True above to enable a tone piano on the touch pads!
-    if TONE_PIANO:
-        if cpx.touch_A1:
-            cpx.start_tone(262)
-        elif cpx.touch_A2:
-            cpx.start_tone(294)
-        elif cpx.touch_A3:
-            cpx.start_tone(330)
-        elif cpx.touch_A4:
-            cpx.start_tone(349)
-        elif cpx.touch_A5:
-            cpx.start_tone(392)
-        elif cpx.touch_A6:
-            cpx.start_tone(440)
-        elif cpx.touch_A7:
-            cpx.start_tone(494)
-        else:
+    if cpx.tapped:
+        new_brightness = cpx.pixels.brightness + .20
+        if new_brightness > 1.0:
+            new_brightness -= 1.0
+        cpx.pixels.brightness = new_brightness
+
+
+    # If the switch is to the left, it returns True!
+    if cpx.switch:
+        if current_note is None or now - note_start > current_note[1]:
+            cpx.stop_tone()
+            note_index = ( note_index + 1 ) % note_count
+            current_note = notes[note_index]
+            if current_note[0]:
+                cpx.start_tone(tones[current_note[0]])
+            note_start = now
+    else:
+        if current_note is not None:
+            current_note = None
             cpx.stop_tone()
