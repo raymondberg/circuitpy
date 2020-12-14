@@ -5,7 +5,7 @@ import microcontroller
 from adafruit_circuitplayground.express import cpx
 
 # Set TONE_PIANO to True to enable a tone piano on the touch pads!
-TONE_PIANO = False
+TONE_PIANO = True
 
 # Set this as a float from 0 to 1 to change the brightness. The decimal represents a percentage.
 # So, 0.3 means 30% brightness!
@@ -37,6 +37,7 @@ def color_wheel(pos):
 digi_key_colors = ((255, 0, 0), (180, 180, 150))
 # Python colors: blue and yellow!
 python_colors = ((32, 64, 255), (255, 180, 20))
+ridley_colors = ((0, 255, 89), (255, 204, 0))
 
 color_index = 0
 pixel_number = 0
@@ -44,52 +45,58 @@ pixel_number = 0
 start = time.monotonic()
 while True:
     now = time.monotonic()
-    if board_id == 0:
-        # Flash Digi-Key colors!
-        if now - start > 0.5:
-            color_index = (color_index + 1) % len(digi_key_colors)
-            cpx.pixels.fill(digi_key_colors[color_index])
-            cpx.pixels.show()
-            start = now
-    elif board_id == 1:
-        # Flash Python colors!
-        if now - start > 0.5:
-            color_index = (color_index + 1) % len(python_colors)
-            cpx.pixels.fill(python_colors[color_index])
-            cpx.pixels.show()
-            start = now
-    elif board_id == 2:
-        # Red-comet rainbow swirl!
-        pixel_number = (pixel_number + 1) % 10
-        for p in range(10):
-            color = color_wheel(25 * ((pixel_number + p) % 10))
-            cpx.pixels[p] = tuple([int(c * (10 - (pixel_number + p) % 10) / 10.0) for c in color])
-            cpx.pixels.show()
+    if now - start > 0.5:
+        color_index = (color_index + 1) % len(digi_key_colors)
+        cpx.pixels.fill(ridley_colors[color_index])
+        cpx.pixels.show()
+        start = now
 
-    # If the switch is to the left, it returns True!
-    cpx.red_led = cpx.switch
-
-    # Press the buttons to play sounds!
-    if cpx.button_a:
-        cpx.play_file("sound_a.wav")
-    elif cpx.button_b:
-        cpx.play_file("sound_b.wav")
-
-    # Set TONE_PIANO to True above to enable a tone piano on the touch pads!
-    if TONE_PIANO:
-        if cpx.touch_A1:
-            cpx.start_tone(262)
-        elif cpx.touch_A2:
-            cpx.start_tone(294)
-        elif cpx.touch_A3:
-            cpx.start_tone(330)
-        elif cpx.touch_A4:
-            cpx.start_tone(349)
-        elif cpx.touch_A5:
-            cpx.start_tone(392)
-        elif cpx.touch_A6:
-            cpx.start_tone(440)
-        elif cpx.touch_A7:
-            cpx.start_tone(494)
-        else:
-            cpx.stop_tone()
+    # if board_id == 3:
+    #     # Flash Digi-Key colors!
+    #     if now - start > 0.5:
+    #         color_index = (color_index + 1) % len(digi_key_colors)
+    #         cpx.pixels.fill(digi_key_colors[color_index])
+    #         cpx.pixels.show()
+    #         start = now
+    # elif board_id == 1:
+    #     # Flash Python colors!
+    #     if now - start > 0.5:
+    #         color_index = (color_index + 1) % len(python_colors)
+    #         cpx.pixels.fill(python_colors[color_index])
+    #         cpx.pixels.show()
+    #         start = now
+    # elif board_id == 0:
+    #     # Red-comet rainbow swirl!
+    #     pixel_number = (pixel_number + 1) % 10
+    #     for p in range(10):
+    #         color = color_wheel(25 * ((pixel_number + p) % 10))
+    #         cpx.pixels[p] = tuple([int(c * (10 - (pixel_number + p) % 10) / 10.0) for c in color])
+    #         cpx.pixels.show()
+    #
+    # # If the switch is to the left, it returns True!
+    # cpx.red_led = cpx.switch
+    #
+    # # Press the buttons to play sounds!
+    # if cpx.button_a:
+    #     cpx.play_file("sound_a.wav")
+    # elif cpx.button_b:
+    #     cpx.play_file("sound_b.wav")
+    #
+    # # Set TONE_PIANO to True above to enable a tone piano on the touch pads!
+    # if TONE_PIANO:
+    #     if cpx.touch_A1:
+    #         cpx.start_tone(262)
+    #     elif cpx.touch_A2:
+    #         cpx.start_tone(294)
+    #     elif cpx.touch_A3:
+    #         cpx.start_tone(330)
+    #     elif cpx.touch_A4:
+    #         cpx.start_tone(349)
+    #     elif cpx.touch_A5:
+    #         cpx.start_tone(392)
+    #     elif cpx.touch_A6:
+    #         cpx.start_tone(440)
+    #     elif cpx.touch_A7:
+    #         cpx.start_tone(494)
+    #     else:
+    #         cpx.stop_tone()
